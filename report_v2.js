@@ -1,5 +1,5 @@
-var girl = "Daniel";
-var boy = "Esther"
+var girl = "Esther";
+var boy = "Daniel"
 
 if (girl == boy) {
     console.log("true")
