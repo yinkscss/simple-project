@@ -5,6 +5,6 @@ if (girl == boy) {
     console.log("true")
 
 } else {
-    console.log("false gender selected");
+    console.log("false gender selected.");
 
 } 
