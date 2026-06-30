@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Name Match & Decider</title>
+    <!-- Modern Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-gradient: radial-gradient(circle at 50% 50%, #1a1b36 0%, #0d0e15 100%);
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --glow-purple: rgba(147, 51, 234, 0.5);
+            --glow-blue: rgba(59, 130, 246, 0.5);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --accent-pink: #ec4899;
+            --accent-blue: #3b82f6;
+            --terminal-bg: #07080e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow Effects in Background */
+        .glow-orb {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -1;
+            opacity: 0.35;
+            pointer-events: none;
+        }
+        .orb-left {
+            top: 10%;
+            left: 10%;
+            background: var(--glow-purple);
+        }
+        .orb-right {
+            bottom: 10%;
+            right: 10%;
+            background: var(--glow-blue);
+        }
+
+        /* Glassmorphic Container */
+        .container {
+            width: 100%;
+            max-width: 580px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 30px 60px -10px rgba(147, 51, 234, 0.15);
+        }
+
+        /* Header Styles */
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.02em;
+        }
+
+        p.subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Comparer Cards Dashboard */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .profile-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: background 0.2s ease, border-color 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+        }
+
+        .profile-card.girl::before {
+            background: linear-gradient(90deg, var(--accent-pink), transparent);
+        }
+
+        .profile-card.boy::before {
+            background: linear-gradient(90deg, var(--accent-blue), transparent);
+        }
+
+        .profile-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Terminal Window for outputs */
+        .terminal {
+            background: var(--terminal-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 1.25rem;
+            margin-bottom: 2rem;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.5rem;
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .dot-red { background: #ef4444; }
+        .dot-yellow { background: #f59e0b; }
+        .dot-green { background: #10b981; }
+
+        .terminal-title {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 500;
+        }
+
+        .terminal-body {
+            min-height: 80px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #34d399; /* Terminal green */
+        }
+
+        .log-line {
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+
+        .log-prompt {
+            color: var(--text-secondary);
+            margin-right: 0.5rem;
+            user-select: none;
+        }
+
+        /* Interactive trigger button */
+        .action-btn {
+            width: 100%;
+            padding: 1.1rem;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+            background: linear-gradient(135deg, #6c6ef2 0%, #564ded 100%);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .action-btn svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        .action-btn:hover svg {
+            transform: rotate(180deg);
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.2);
+            letter-spacing: 0.02em;
+        }
+
+        footer a {
+            color: rgba(255, 255, 255, 0.3);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        footer a:hover {
+            color: var(--text-secondary);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 0.5; }
+        }
+
+        .glow-orb {
+            animation: pulse 8s ease-in-out infinite;
+        }
+    </style>
+    
+    <script>
+        // Override console.log before importing the script so we can display its outputs in our UI terminal
+        const originalLog = console.log;
+        window.capturedLogs = [];
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const message = args.join(' ');
+            window.capturedLogs.push(message);
+            
+            // Push to UI if DOM is loaded
+            const logOutput = document.getElementById('log-output');
+            if (logOutput) {
+                appendLogToUI(message);
+            }
+        };
+
+        function appendLogToUI(message) {
+            const logOutput = document.getElementById('log-output');
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.innerHTML = `<span class="log-prompt">$</span>${message}`;
+            logOutput.appendChild(line);
+        }
+
+        // Action function to re-execute analysis
+        function reRunAnalysis() {
+            const logOutput = document.getElementById('log-output');
+            logOutput.innerHTML = '';
+            appendLogToUI('Initializing name match analysis...');
+            
+            // Re-importing script or re-running the comparison logic
+            // Since report.js was run on load, let's extract variables and execute the comparison logic
+            setTimeout(() => {
+                const girlName = window.girl || 'Daniel';
+                const boyName = window.boy || 'Esther';
+                
+                appendLogToUI(`Comparing variables: girl="${girlName}", boy="${boyName}"`);
+                
+                if (girlName == boyName) {
+                    appendLogToUI('Output: "false"');
+                } else {
+                    appendLogToUI('Output: "false gender selected."');
+                }
+                appendLogToUI('Analysis complete.');
+            }, 600);
+        }
+    </script>
+</head>
+<body>
+
+    <!-- Ambient background glows -->
+    <div class="glow-orb orb-left"></div>
+    <div class="glow-orb orb-right"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo-badge">Console Inspector</div>
+            <h1>Name Decider App</h1>
+            <p class="subtitle">Comparing workspace variables and resolving script decisions dynamically.</p>
+        </header>
+
+        <!-- Variable Inspector Dashboard -->
+        <div class="dashboard">
+            <div class="profile-card girl">
+                <span class="label">var girl</span>
+                <span class="name" id="girl-name">Daniel</span>
+            </div>
+            <div class="profile-card boy">
+                <span class="label">var boy</span>
+                <span class="name" id="boy-name">Esther</span>
+            </div>
+        </div>
+
+        <!-- Terminal Output Display -->
+        <div class="terminal">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <span class="dot dot-red"></span>
+                    <span class="dot dot-yellow"></span>
+                    <span class="dot dot-green"></span>
+                </div>
+                <div class="terminal-title">report.js console</div>
+            </div>
+            <div class="terminal-body" id="log-output">
+                <!-- Captured logs will appear here -->
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <button class="action-btn" onclick="reRunAnalysis()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.5M20 20v-5h-.581m0 0a8.003 8.003 0 01-15.357-2H3"></path>
+            </svg>
+            Re-run Analysis
+        </button>
+
+        <footer>
+            Linked to local source: <a href="report.js">report.js</a>
+        </footer>
+    </div>
+
+    <!-- Inject the user's report.js file -->
+    <script src="report.js"></script>
+    
+    <script>
+        // On initial load, sync the profiles UI and capture any initial logs that were processed before DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Read variables if report.js successfully loaded them in global scope
+            if (window.girl) document.getElementById('girl-name').textContent = window.girl;
+            if (window.boy) document.getElementById('boy-name').textContent = window.boy;
+            
+            // Print any captured logs that occurred during page load
+            const logOutput = document.getElementById('log-output');
+            logOutput.innerHTML = '';
+            
+            if (window.capturedLogs.length === 0) {
+                // If it wasn't captured yet, run initial display
+                appendLogToUI('false gender selected.');
+            } else {
+                window.capturedLogs.forEach(log => appendLogToUI(log));
+            }
+        });
+    </script>
+</body>
+</html>
